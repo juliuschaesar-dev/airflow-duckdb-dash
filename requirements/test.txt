@@ -1,0 +1,4 @@
+-r common.txt
+requests>=2.31
+pyarrow>=17.0
+pytest>=8.0
