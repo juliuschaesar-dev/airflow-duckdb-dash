@@ -76,9 +76,6 @@ cp .env.example .env
 | `AIRFLOW_JWT_SECRET` / `AIRFLOW_JWT_ISSUER` | Shared secret Airflow components use to authenticate to `airflow-apiserver` | `airflow_jwt_secret` / `airflow` |
 | `CRYPTO_API_BASE_URL` | CoinGecko `/coins/markets` endpoint the `extract` task calls | `https://api.coingecko.com/api/v3/coins/markets` |
 
-The defaults are fine for local dev; change them before deploying anywhere
-shared.
-
 ## Running it
 
 ```bash
