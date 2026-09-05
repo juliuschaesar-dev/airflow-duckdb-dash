@@ -4,12 +4,7 @@ End-to-end crypto market data pipeline: **CoinGecko API → Airflow → DuckDB �
 
 ## Architecture
 
-```
-CoinGecko API (public, no key required)
-  -> Airflow DAG: extract -> transform -> quality_check -> load
-  -> DuckDB (embedded, single .duckdb file, Airflow is the sole writer)
-  -> Plotly Dash (reads DuckDB read_only=True, separate service)
-```
+<img src="docs/architecture.svg" width="100%" alt="Pipeline architecture: CoinGecko API, Airflow (extract, transform_and_validate, load), DuckDB, Plotly Dash, PostgreSQL, Airflow UI, airflow-init">
 
 - **Orchestration**: Apache Airflow 3.3.1 (LocalExecutor, Postgres metadata DB), Python 3.13
 - **Extraction**: `requests`, with retry/backoff for CoinGecko's rate limits
@@ -31,6 +26,8 @@ CoinGecko API (public, no key required)
 │   └── Dockerfile              # python:3.13.14-slim
 ├── docker/airflow/
 │   └── Dockerfile              # apache/airflow:3.3.1-python3.13
+├── docs/
+│   └── architecture.svg        # diagram rendered at the top of this README
 ├── requirements/                # single source of truth for dependency floors
 │   ├── common.txt               # duckdb, pandas — shared by every environment
 │   ├── airflow.txt               # common + requests, pyarrow, apache-airflow-providers-fab
