@@ -38,8 +38,7 @@ CoinGecko API (public, no key required)
 │   └── dashboard.txt             # common + dash, plotly, gunicorn
 ├── data/                       # crypto.duckdb lives here at runtime (gitignored)
 ├── tests/
-│   ├── unit/                   # business logic — no Airflow install required
-│   └── dags/                   # DAG-integrity checks — needs Airflow, else skipped
+│   └── utils/                  # business logic — no Airflow install required
 ├── .env.example                # copy to .env — see Configuration below
 └── docker-compose.yml
 ```
