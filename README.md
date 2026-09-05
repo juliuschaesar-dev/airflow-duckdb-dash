@@ -93,21 +93,27 @@ right away instead of waiting for the next scheduled slot.
 
 ## Pipeline design
 
+Each run is keyed by an hourly `snapshot_ts` (`logical_date` formatted as
+`YYYY-MM-DDTHH`, e.g. `2026-09-05T06`) rather than the daily `ds` — `ds` alone
+would collapse all four `0 */6 * * *` runs of the same calendar day onto one
+snapshot.
+
 1. **extract** — calls `GET /coins/markets` (top 50 coins by market cap, USD),
-   writes the raw JSON response to `data/raw/{ds}.json`.
+   writes the raw JSON response to `data/raw/{snapshot_ts}.json`.
 2. **transform_and_validate** (TaskGroup)
    - **transform** — casts types, drops rows missing required fields, dedupes
      by `coin_id`, derives `price_change_flag` (`up`/`down`/`flat`/`unknown`),
-     writes `data/processed/{ds}.parquet`.
+     writes `data/processed/{snapshot_ts}.parquet`.
    - **quality_check** — asserts non-empty, no duplicate/null `coin_id`,
      no negative prices, all expected columns present. Raises
      `AirflowException` on failure so the DAG stops before touching DuckDB.
 3. **load** — upserts into `crypto_market_data`, keyed on `(coin_id, snapshot_ts)`:
    deletes any existing rows for that snapshot, then inserts the new batch.
-   Re-running the same logical date is idempotent — no duplicate rows. The
-   `CREATE TABLE`/`INSERT` column list in `dags/utils/load.py` is generated
-   from `transform.OUTPUT_COLUMNS` at import time, so the table schema can't
-   drift out of sync with what `transform` actually produces.
+   Re-running the same logical date (e.g. a manual trigger the same hour) is
+   idempotent — no duplicate rows. The `CREATE TABLE`/`INSERT` column list in
+   `dags/utils/load.py` is generated from `transform.OUTPUT_COLUMNS` at import
+   time, so the table schema can't drift out of sync with what `transform`
+   actually produces.
 
 Reliability: 3 retries with exponential backoff per task, `max_active_runs=1`
 to avoid overlapping runs, and an `on_failure_callback` hook
