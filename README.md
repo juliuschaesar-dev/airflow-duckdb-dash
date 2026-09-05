@@ -15,8 +15,7 @@ CoinGecko API (public, no key required)
 - **Extraction**: `requests`, with retry/backoff for CoinGecko's rate limits
 - **Storage**: DuckDB, single embedded file at `data/crypto.duckdb`
 - **Visualization**: Plotly Dash, its own container, reads DuckDB read-only
-- **Tests**: pytest, split into unit tests (`tests/unit/`) and DAG-integrity
-  checks (`tests/dags/`)
+- **Tests**: pytest, unit tests for `dags/utils/` modules (`tests/utils/`)
 
 ## Repo structure
 
@@ -29,7 +28,7 @@ CoinGecko API (public, no key required)
 ├── dashboard/
 │   ├── app.py
 │   ├── assets/style.css
-│   └── Dockerfile              # python:3.13.15-slim
+│   └── Dockerfile              # python:3.13.14-slim
 ├── docker/airflow/
 │   └── Dockerfile              # apache/airflow:3.3.1-python3.13
 ├── requirements/                # single source of truth for dependency floors
@@ -137,9 +136,5 @@ pip install -r requirements/test.txt
 pytest tests/
 ```
 
-- `tests/unit/` — one file per `dags/utils/` module (`test_transform.py`,
+- `tests/utils/` — one file per `dags/utils/` module (`test_transform.py`,
   `test_validate.py`, `test_load.py`), no Airflow install required.
-- `tests/dags/test_crypto_pipeline.py` — DAG-integrity checks (expected task
-  IDs, tags, retry policy). Runs for real inside the Airflow container;
-  skipped automatically wherever `apache-airflow` isn't installed, since
-  Airflow only supports POSIX (no native Windows).
