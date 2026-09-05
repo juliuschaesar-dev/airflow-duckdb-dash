@@ -74,7 +74,8 @@ cp .env.example .env
 ## Running it
 
 ```bash
-docker compose up --build
+docker compose up --build -d
+docker compose logs -f airflow-init  # watch db migrate + admin user creation
 ```
 
 - Airflow UI (api-server): http://localhost:8080 (login: `AIRFLOW_ADMIN_USERNAME`
@@ -82,6 +83,9 @@ docker compose up --build
   set explicitly since Airflow 3's new default `SimpleAuthManager` auto-generates
   a one-time password instead)
 - Dash dashboard: http://localhost:8050
+
+`-d` runs the stack detached, independent of the terminal session. To stop it:
+`docker compose down` (add `-v` to also drop the Postgres/log volumes).
 
 The `crypto_pipeline` DAG is unpaused on creation and scheduled `0 */6 * * *`.
 Trigger a manual run from the Airflow UI to see data show up on the dashboard
