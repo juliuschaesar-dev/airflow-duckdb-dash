@@ -13,7 +13,7 @@ import plotly.express as px
 from dash import Dash, Input, Output, dcc, html
 
 DB_PATH = os.environ.get("CRYPTO_DB_PATH", "/app/data/crypto.duckdb")
-REFRESH_INTERVAL_MS = int(os.environ.get("CRYPTO_REFRESH_MS", 300_000))
+REFRESH_INTERVAL_MS = int(os.environ["CRYPTO_REFRESH_MS"])
 
 TABLE_NAME = "crypto_market_data"
 

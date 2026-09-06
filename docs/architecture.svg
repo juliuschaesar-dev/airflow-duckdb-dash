@@ -127,7 +127,7 @@
     <text x="973" y="318" class="box-desc" fill="var(--ink-dim)">line &#183; bar &#183; treemap</text>
     <text x="973" y="332" class="box-desc" fill="var(--ink-dim)">views, own container</text>
     <text x="973" y="354" class="box-mono" fill="var(--ink-dim)">read_only=True</text>
-    <text x="973" y="368" class="box-mono" fill="var(--ink-dim)">refresh every 5 min</text>
+    <text x="973" y="368" class="box-mono" fill="var(--ink-dim)">refresh every 60 min</text>
     <text x="1165" y="388" class="box-tag" fill="var(--ink-faint)" text-anchor="end">dashboard :8050</text>
   </g>
 
