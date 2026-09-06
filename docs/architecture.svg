@@ -103,7 +103,7 @@
     <text x="357" y="293" class="box-title" fill="var(--rose)">Airflow DAG &#183; crypto_pipeline</text>
     <text x="323" y="318" class="box-desc" fill="var(--ink-dim)">extract &#8594; transform_and_validate &#8594; load</text>
     <text x="323" y="332" class="box-desc" fill="var(--ink-faint)">(transform, quality_check)</text>
-    <text x="323" y="354" class="box-mono" fill="var(--ink-dim)">schedule 0 */6 * * *</text>
+    <text x="323" y="354" class="box-mono" fill="var(--ink-dim)">schedule 0 6 * * *</text>
     <text x="323" y="368" class="box-mono" fill="var(--ink-dim)">retries=3 &#183; max_active_runs=1</text>
     <text x="637" y="388" class="box-tag" fill="var(--ink-faint)" text-anchor="end">scheduler &#183; dag-processor</text>
   </g>
@@ -156,7 +156,7 @@
   <path d="M853,540 L864,547 L853,554 z" fill="var(--ink-faint)"></path>
   <text x="880" y="551" class="box-title" fill="var(--ink-dim)">Manual trigger</text>
   <text x="846" y="573" class="box-desc" fill="var(--ink-faint)">run now from the Airflow UI,</text>
-  <text x="846" y="587" class="box-desc" fill="var(--ink-faint)">instead of waiting for the next 6h slot</text>
+  <text x="846" y="587" class="box-desc" fill="var(--ink-faint)">instead of waiting for the next daily slot</text>
 
   <!-- ============ legend ============ -->
   <g transform="translate(40,650)">
