@@ -28,14 +28,14 @@ REFRESH_INTERVAL_MS = int(os.environ["CRYPTO_REFRESH_MS"])
 def get_connection() -> duckdb.DuckDBPyConnection | None:
     if not os.path.exists(DB_PATH):
         return None
-    return duckdb.connect(DB_PATH, read_only=True)
+    try:
+        return duckdb.connect(DB_PATH, read_only=True)
+    except duckdb.Error:
+        return None
 
 
 def load_history() -> pd.DataFrame:
-    try:
-        con = get_connection()
-    except duckdb.Error:
-        return pd.DataFrame()
+    con = get_connection()
     if con is None:
         return pd.DataFrame()
     try:
