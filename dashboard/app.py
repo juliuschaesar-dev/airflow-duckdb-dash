@@ -126,6 +126,7 @@ def update_price_line_chart(selected_coins, _n):
         title="Price over time",
         labels={"snapshot_ts": "Snapshot", "current_price": "Price (USD)", "name": "Coin"},
     )
+    fig.update_xaxes(dtick="D1", tickformat="%b %d, %Y")
     return fig
 
 
