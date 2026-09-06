@@ -17,7 +17,7 @@ End-to-end crypto market data pipeline: **CoinGecko API → Airflow → DuckDB �
 ```
 ├── dags/
 │   ├── crypto_pipeline.py      # DAG wiring (Airflow 3 Task SDK / TaskFlow API)
-│   ├── constants.py            # shared literals (table name, price-change flags)
+│   ├── constants.py            # shared literals: table name, schema columns, flags
 │   ├── .airflowignore          # excludes pipeline/ and constants.py from DAG-file parsing
 │   └── pipeline/               # extract/transform/validate/load — no Airflow dependency
 ├── plugins/                    # custom operators/hooks/sensors (none yet — placeholder)
