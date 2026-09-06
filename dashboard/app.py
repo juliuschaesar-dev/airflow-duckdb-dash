@@ -32,7 +32,10 @@ def get_connection() -> duckdb.DuckDBPyConnection | None:
 
 
 def load_history() -> pd.DataFrame:
-    con = get_connection()
+    try:
+        con = get_connection()
+    except duckdb.Error:
+        return pd.DataFrame()
     if con is None:
         return pd.DataFrame()
     try:
@@ -43,7 +46,8 @@ def load_history() -> pd.DataFrame:
             ORDER BY snapshot_ts
             """
         ).fetch_df()
-    except duckdb.CatalogException:
+    except duckdb.Error:
+        # e.g. CatalogException: the table doesn't exist yet.
         return pd.DataFrame()
     finally:
         con.close()
