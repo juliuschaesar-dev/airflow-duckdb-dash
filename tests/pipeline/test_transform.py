@@ -42,3 +42,10 @@ class TestTransform:
     def test_snapshot_ts_stamped_on_every_row(self, raw_sample):
         df = transform_market_data(raw_sample, snapshot_ts="2024-06-15")
         assert (df["snapshot_ts"] == "2024-06-15").all()
+
+    def test_rounds_fractional_market_cap_and_volume(self, raw_sample):
+        raw = [{**raw_sample[0], "id": "penny-coin", "market_cap": 124164443.0, "total_volume": 2322.76}]
+        df = transform_market_data(raw, snapshot_ts="2024-01-01")
+        row = df[df["coin_id"] == "penny-coin"].iloc[0]
+        assert row["market_cap"] == 124164443
+        assert row["total_volume"] == 2323

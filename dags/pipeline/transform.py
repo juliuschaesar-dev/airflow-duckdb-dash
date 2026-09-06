@@ -51,9 +51,9 @@ def transform_market_data(raw: list[dict], snapshot_ts: str) -> pd.DataFrame:
     df["symbol"] = df["symbol"].astype(str).str.lower()
     df["name"] = df["name"].astype(str)
     df["current_price"] = pd.to_numeric(df["current_price"], errors="coerce")
-    df["market_cap"] = pd.to_numeric(df["market_cap"], errors="coerce").astype("Int64")
+    df["market_cap"] = pd.to_numeric(df["market_cap"], errors="coerce").round().astype("Int64")
     df["market_cap_rank"] = pd.to_numeric(df["market_cap_rank"], errors="coerce").astype("Int64")
-    df["total_volume"] = pd.to_numeric(df["total_volume"], errors="coerce").astype("Int64")
+    df["total_volume"] = pd.to_numeric(df["total_volume"], errors="coerce").round().astype("Int64")
     df["price_change_percentage_24h"] = pd.to_numeric(
         df["price_change_percentage_24h"], errors="coerce"
     )
