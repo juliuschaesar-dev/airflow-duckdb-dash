@@ -7,9 +7,8 @@ from pathlib import Path
 import duckdb
 import pandas as pd
 
+from constants import CRYPTO_MARKET_DATA
 from .transform import OUTPUT_COLUMNS
-
-TABLE_NAME = "crypto_market_data"
 
 # SQL type for each column in OUTPUT_COLUMNS — the single source of truth
 # for the table schema, so it can't drift out of sync with the transform step.
@@ -28,7 +27,7 @@ _COLUMN_TYPES = {
 
 _column_defs = ",\n    ".join(f"{col} {_COLUMN_TYPES[col]}" for col in OUTPUT_COLUMNS)
 CREATE_TABLE_SQL = f"""
-CREATE TABLE IF NOT EXISTS {TABLE_NAME} (
+CREATE TABLE IF NOT EXISTS {CRYPTO_MARKET_DATA} (
     {_column_defs},
     ingested_at TIMESTAMP NOT NULL DEFAULT current_timestamp,
     PRIMARY KEY (coin_id, snapshot_ts)
@@ -40,12 +39,12 @@ _insert_columns_sql = ", ".join(OUTPUT_COLUMNS)
 # incoming DataFrame, so a stale/mismatched value in `df` can't get loaded.
 _select_exprs_sql = ", ".join("?" if col == "snapshot_ts" else col for col in OUTPUT_COLUMNS)
 UPSERT_SQL = f"""
-INSERT INTO {TABLE_NAME} ({_insert_columns_sql})
+INSERT INTO {CRYPTO_MARKET_DATA} ({_insert_columns_sql})
 SELECT {_select_exprs_sql}
 FROM new_data
 """
 
-DELETE_SNAPSHOT_SQL = f"DELETE FROM {TABLE_NAME} WHERE snapshot_ts = ?"
+DELETE_SNAPSHOT_SQL = f"DELETE FROM {CRYPTO_MARKET_DATA} WHERE snapshot_ts = ?"
 
 
 def load_market_data(df: pd.DataFrame, db_path: str | os.PathLike, snapshot_ts: str) -> int:
@@ -64,7 +63,7 @@ def load_market_data(df: pd.DataFrame, db_path: str | os.PathLike, snapshot_ts: 
         con.execute(DELETE_SNAPSHOT_SQL, [snapshot_ts])
         con.execute(UPSERT_SQL, [snapshot_ts])
         inserted = con.execute(
-            f"SELECT count(*) FROM {TABLE_NAME} WHERE snapshot_ts = ?", [snapshot_ts]
+            f"SELECT count(*) FROM {CRYPTO_MARKET_DATA} WHERE snapshot_ts = ?", [snapshot_ts]
         ).fetchone()[0]
         return int(inserted)
     finally:

@@ -1,10 +1,10 @@
-"""Unit tests for dags/utils/load.py."""
+"""Unit tests for dags/pipeline/load.py."""
 from __future__ import annotations
 
 import duckdb
 
-from utils.load import TABLE_NAME, load_market_data
-from utils.transform import transform_market_data
+from pipeline.load import CRYPTO_MARKET_DATA, load_market_data
+from pipeline.transform import transform_market_data
 
 
 class TestLoad:
@@ -19,7 +19,7 @@ class TestLoad:
 
         con = duckdb.connect(str(db_path), read_only=True)
         try:
-            total = con.execute(f"SELECT count(*) FROM {TABLE_NAME}").fetchone()[0]
+            total = con.execute(f"SELECT count(*) FROM {CRYPTO_MARKET_DATA}").fetchone()[0]
         finally:
             con.close()
         assert total == len(df)
@@ -33,7 +33,7 @@ class TestLoad:
 
         con = duckdb.connect(str(db_path), read_only=True)
         try:
-            total = con.execute(f"SELECT count(*) FROM {TABLE_NAME}").fetchone()[0]
+            total = con.execute(f"SELECT count(*) FROM {CRYPTO_MARKET_DATA}").fetchone()[0]
         finally:
             con.close()
         assert total == 2 * len(df)

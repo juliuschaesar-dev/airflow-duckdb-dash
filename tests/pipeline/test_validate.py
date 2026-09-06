@@ -1,11 +1,11 @@
-"""Unit tests for dags/utils/validate.py."""
+"""Unit tests for dags/pipeline/validate.py."""
 from __future__ import annotations
 
 import pandas as pd
 import pytest
 
-from utils.transform import transform_market_data
-from utils.validate import DataQualityError, validate_market_data
+from pipeline.transform import transform_market_data
+from pipeline.validate import DataQualityError, validate_market_data
 
 
 class TestValidate:

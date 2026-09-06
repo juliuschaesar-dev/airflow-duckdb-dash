@@ -5,6 +5,7 @@ WORKDIR /app
 COPY requirements/ /requirements/
 RUN pip install --no-cache-dir -r /requirements/dashboard.txt
 
+COPY dags/constants.py .
 COPY dashboard/app.py .
 COPY dashboard/assets/ ./assets/
 

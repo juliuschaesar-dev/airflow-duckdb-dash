@@ -1,6 +1,6 @@
-"""Shared fixtures for dags/utils unit tests.
+"""Shared fixtures for dags/pipeline unit tests.
 
-Puts `dags/` on sys.path so tests can `import utils.xxx` the same way
+Puts `dags/` on sys.path so tests can `import pipeline.xxx` the same way
 `dags/crypto_pipeline.py` does, without requiring Airflow to be installed.
 """
 from __future__ import annotations

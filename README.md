@@ -10,15 +10,16 @@ End-to-end crypto market data pipeline: **CoinGecko API → Airflow → DuckDB �
 - **Extraction**: `requests`, with retry/backoff for CoinGecko's rate limits
 - **Storage**: DuckDB, single embedded file at `data/crypto.duckdb`
 - **Visualization**: Plotly Dash, its own container, reads DuckDB read-only
-- **Tests**: pytest, unit tests for `dags/utils/` modules (`tests/utils/`)
+- **Tests**: pytest, unit tests for `dags/pipeline/` modules (`tests/pipeline/`)
 
 ## Repo structure
 
 ```
 ├── dags/
 │   ├── crypto_pipeline.py      # DAG wiring (Airflow 3 Task SDK / TaskFlow API)
-│   ├── .airflowignore          # excludes utils/ from DAG-file parsing
-│   └── utils/                  # extract/transform/validate/load — no Airflow dependency
+│   ├── constants.py            # shared literals (table name, price-change flags)
+│   ├── .airflowignore          # excludes pipeline/ and constants.py from DAG-file parsing
+│   └── pipeline/               # extract/transform/validate/load — no Airflow dependency
 ├── plugins/                    # custom operators/hooks/sensors (none yet — placeholder)
 ├── dashboard/
 │   ├── app.py
@@ -35,7 +36,7 @@ End-to-end crypto market data pipeline: **CoinGecko API → Airflow → DuckDB �
 │   └── dashboard.txt             # common + dash, plotly, gunicorn
 ├── data/                       # crypto.duckdb lives here at runtime (gitignored)
 ├── tests/
-│   └── utils/                  # business logic — no Airflow install required
+│   └── pipeline/                # business logic — no Airflow install required
 ├── .env.example                # copy to .env — see Configuration below
 └── docker-compose.yml
 ```
@@ -106,15 +107,15 @@ right away instead of waiting for the next scheduled slot.
 3. **load** — upserts into `crypto_market_data`, keyed on `(coin_id, snapshot_ts)`:
    deletes any existing rows for that snapshot, then inserts the new batch.
    Re-running the same logical date is idempotent — no duplicate rows. The
-   `CREATE TABLE`/`INSERT` column list in `dags/utils/load.py` is generated
+   `CREATE TABLE`/`INSERT` column list in `dags/pipeline/load.py` is generated
    from `transform.OUTPUT_COLUMNS` at import
    time, so the table schema can't drift out of sync with what `transform`
    actually produces.
 
 Reliability: 3 retries with exponential backoff per task, `max_active_runs=1`
-to avoid overlapping runs, and an `on_failure_callback` hook
-(`alert_on_failure` in `crypto_pipeline.py`) as the place to wire up
-Slack/email/PagerDuty alerting.
+to avoid overlapping runs. Failed task instances already show up in the
+Airflow UI; add an `on_failure_callback` to `default_args` in
+`crypto_pipeline.py` if Slack/email/PagerDuty alerting is needed later.
 
 ## DuckDB single-writer note
 
@@ -138,5 +139,5 @@ pip install -r requirements/test.txt
 pytest tests/
 ```
 
-- `tests/utils/` — one file per `dags/utils/` module (`test_transform.py`,
+- `tests/pipeline/` — one file per `dags/pipeline/` module (`test_transform.py`,
   `test_validate.py`, `test_load.py`), no Airflow install required.

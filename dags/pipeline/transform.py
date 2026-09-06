@@ -6,6 +6,8 @@ from pathlib import Path
 
 import pandas as pd
 
+from constants import FLAG_DOWN, FLAG_FLAT, FLAG_UNKNOWN, FLAG_UP
+
 REQUIRED_RAW_FIELDS = [
     "id",
     "symbol",
@@ -33,12 +35,12 @@ OUTPUT_COLUMNS = [
 
 def _price_change_flag(pct: float | None) -> str:
     if pct is None or pd.isna(pct):
-        return "unknown"
+        return FLAG_UNKNOWN
     if pct > 0:
-        return "up"
+        return FLAG_UP
     if pct < 0:
-        return "down"
-    return "flat"
+        return FLAG_DOWN
+    return FLAG_FLAT
 
 
 def transform_market_data(raw: list[dict], snapshot_ts: str) -> pd.DataFrame:

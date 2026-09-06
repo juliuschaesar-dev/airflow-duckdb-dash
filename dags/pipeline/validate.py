@@ -3,6 +3,7 @@ from __future__ import annotations
 
 import pandas as pd
 
+from constants import PRICE_CHANGE_FLAGS
 from .transform import OUTPUT_COLUMNS
 
 
@@ -31,7 +32,6 @@ def validate_market_data(df: pd.DataFrame, min_rows: int = 1) -> None:
     if (df["market_cap"] < 0).any():
         raise DataQualityError("Negative market_cap values found")
 
-    valid_flags = {"up", "down", "flat", "unknown"}
-    bad_flags = set(df["price_change_flag"].unique()) - valid_flags
+    bad_flags = set(df["price_change_flag"].unique()) - set(PRICE_CHANGE_FLAGS)
     if bad_flags:
         raise DataQualityError(f"Unexpected price_change_flag values: {bad_flags}")

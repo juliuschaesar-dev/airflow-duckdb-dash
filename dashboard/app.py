@@ -12,10 +12,10 @@ import pandas as pd
 import plotly.express as px
 from dash import Dash, Input, Output, dcc, html
 
+from constants import FLAG_DOWN, FLAG_FLAT, FLAG_UNKNOWN, FLAG_UP, CRYPTO_MARKET_DATA
+
 DB_PATH = os.environ.get("CRYPTO_DB_PATH", "/app/data/crypto.duckdb")
 REFRESH_INTERVAL_MS = int(os.environ["CRYPTO_REFRESH_MS"])
-
-TABLE_NAME = "crypto_market_data"
 
 
 def get_connection() -> duckdb.DuckDBPyConnection | None:
@@ -33,7 +33,7 @@ def load_history() -> pd.DataFrame:
             f"""
             SELECT coin_id, symbol, name, current_price, market_cap, market_cap_rank,
                    total_volume, price_change_percentage_24h, price_change_flag, snapshot_ts
-            FROM {TABLE_NAME}
+            FROM {CRYPTO_MARKET_DATA}
             ORDER BY snapshot_ts
             """
         ).fetch_df()
@@ -142,7 +142,12 @@ def update_gainers_losers_bar(_n):
         y="name",
         orientation="h",
         color="price_change_flag",
-        color_discrete_map={"up": "#2ca02c", "down": "#d62728", "flat": "#7f7f7f", "unknown": "#bbbbbb"},
+        color_discrete_map={
+            FLAG_UP: "#2ca02c",
+            FLAG_DOWN: "#d62728",
+            FLAG_FLAT: "#7f7f7f",
+            FLAG_UNKNOWN: "#bbbbbb",
+        },
         title="Top gainers / losers (24h)",
         labels={"price_change_percentage_24h": "24h change (%)", "name": "Coin"},
     )

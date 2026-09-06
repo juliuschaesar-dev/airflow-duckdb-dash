@@ -1,8 +1,8 @@
 """Extract → transform → validate → load pipeline for CoinGecko market data.
 
-Business logic lives in `dags.utils` (extract/transform/validate/load) so it
-can be unit-tested without Airflow installed; this module just wires those
-functions into a DAG via the TaskFlow API.
+Business logic lives in `dags.pipeline` (extract/transform/validate/load) so
+it can be unit-tested without Airflow installed; this module just wires
+those functions into a DAG via the TaskFlow API.
 """
 from __future__ import annotations
 
@@ -14,10 +14,10 @@ import pandas as pd
 from airflow.sdk import DAG, TaskGroup, task
 from airflow.sdk.exceptions import AirflowException
 
-from utils.extract import COINGECKO_MARKETS_URL, fetch_market_data, load_raw_response, save_raw_response
-from utils.load import load_market_data
-from utils.transform import save_processed, transform_market_data
-from utils.validate import DataQualityError, validate_market_data
+from pipeline.extract import COINGECKO_MARKETS_URL, fetch_market_data, load_raw_response, save_raw_response
+from pipeline.load import load_market_data
+from pipeline.transform import save_processed, transform_market_data
+from pipeline.validate import DataQualityError, validate_market_data
 
 logger = logging.getLogger(__name__)
 
@@ -31,25 +31,12 @@ def _snapshot_path(subdir: str, extension: str, ds: str) -> str:
     return os.path.join(DATA_DIR, subdir, f"{ds}.{extension}")
 
 
-def alert_on_failure(context: dict) -> None:
-    """Extension point for paging/Slack/email — logs today, wire up a real
-    notifier (SlackWebhookOperator, EmailOperator, etc.) here later."""
-    ti = context["task_instance"]
-    logger.error(
-        "Task %s in DAG %s failed on run %s",
-        ti.task_id,
-        ti.dag_id,
-        context.get("logical_date"),
-    )
-
-
 default_args = {
     "owner": "data-eng",
     "retries": 3,
     "retry_delay": timedelta(minutes=5),
     "retry_exponential_backoff": True,
     "max_retry_delay": timedelta(minutes=30),
-    "on_failure_callback": alert_on_failure,
 }
 
 with DAG(
@@ -78,7 +65,7 @@ with DAG(
     def quality_check_task(processed_path: str) -> str:
         df = pd.read_parquet(processed_path)
         try:
-            validate_market_data(df, min_rows=1)
+            validate_market_data(df)
         except DataQualityError as exc:
             raise AirflowException(f"Data quality check failed: {exc}") from exc
         return processed_path
