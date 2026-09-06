@@ -6,31 +6,14 @@ from pathlib import Path
 
 import pandas as pd
 
-from constants import FLAG_DOWN, FLAG_FLAT, FLAG_UNKNOWN, FLAG_UP
-
-REQUIRED_RAW_FIELDS = [
-    "id",
-    "symbol",
-    "name",
-    "current_price",
-    "market_cap",
-    "market_cap_rank",
-    "total_volume",
-]
-
-# Columns the pipeline persists downstream, in a stable order.
-OUTPUT_COLUMNS = [
-    "coin_id",
-    "symbol",
-    "name",
-    "current_price",
-    "market_cap",
-    "market_cap_rank",
-    "total_volume",
-    "price_change_percentage_24h",
-    "price_change_flag",
-    "snapshot_ts",
-]
+from constants import (
+    FLAG_DOWN,
+    FLAG_FLAT,
+    FLAG_UNKNOWN,
+    FLAG_UP,
+    OUTPUT_COLUMNS,
+    REQUIRED_RAW_FIELDS,
+)
 
 
 def _price_change_flag(pct: float | None) -> str:

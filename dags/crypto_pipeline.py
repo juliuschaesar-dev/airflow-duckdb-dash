@@ -14,7 +14,7 @@ import pandas as pd
 from airflow.sdk import DAG, TaskGroup, task
 from airflow.sdk.exceptions import AirflowException
 
-from pipeline.extract import COINGECKO_MARKETS_URL, fetch_market_data, load_raw_response, save_raw_response
+from pipeline.extract import fetch_market_data, load_raw_response, save_raw_response
 from pipeline.load import load_market_data
 from pipeline.transform import save_processed, transform_market_data
 from pipeline.validate import DataQualityError, validate_market_data
@@ -23,8 +23,8 @@ logger = logging.getLogger(__name__)
 
 DATA_DIR = os.environ.get("CRYPTO_DATA_DIR", "/opt/airflow/data")
 DB_PATH = os.path.join(DATA_DIR, "crypto.duckdb")
-TOP_N_COINS = int(os.environ.get("CRYPTO_TOP_N", "50"))
-API_BASE_URL = os.environ.get("CRYPTO_API_BASE_URL", COINGECKO_MARKETS_URL)
+TOP_N_COINS = int(os.environ["CRYPTO_TOP_N"])
+API_BASE_URL = os.environ["CRYPTO_API_BASE_URL"]
 
 
 def _snapshot_path(subdir: str, extension: str, ds: str) -> str:

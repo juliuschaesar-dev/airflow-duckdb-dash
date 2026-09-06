@@ -93,7 +93,7 @@
     <text x="58" y="318" class="box-desc" fill="var(--ink-dim)">public REST, no key</text>
     <text x="58" y="332" class="box-desc" fill="var(--ink-dim)">required</text>
     <text x="58" y="354" class="box-mono" fill="var(--ink-dim)">GET /coins/markets</text>
-    <text x="58" y="368" class="box-mono" fill="var(--ink-dim)">top 50 coins &#183; USD</text>
+    <text x="58" y="368" class="box-mono" fill="var(--ink-dim)">top 250 coins &#183; USD</text>
   </g>
 
   <g>

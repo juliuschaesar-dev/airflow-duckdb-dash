@@ -7,8 +7,7 @@ from pathlib import Path
 import duckdb
 import pandas as pd
 
-from constants import CRYPTO_MARKET_DATA
-from .transform import OUTPUT_COLUMNS
+from constants import CRYPTO_MARKET_DATA, OUTPUT_COLUMNS
 
 # SQL type for each column in OUTPUT_COLUMNS — the single source of truth
 # for the table schema, so it can't drift out of sync with the transform step.

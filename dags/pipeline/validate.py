@@ -3,8 +3,7 @@ from __future__ import annotations
 
 import pandas as pd
 
-from constants import PRICE_CHANGE_FLAGS
-from .transform import OUTPUT_COLUMNS
+from constants import OUTPUT_COLUMNS, PRICE_CHANGE_FLAGS
 
 
 class DataQualityError(ValueError):

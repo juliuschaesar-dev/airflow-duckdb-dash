@@ -71,6 +71,7 @@ cp .env.example .env
 | `AIRFLOW_ADMIN_USERNAME` / `AIRFLOW_ADMIN_PASSWORD` | Airflow web UI login | `admin` / `admin` |
 | `AIRFLOW_JWT_SECRET` / `AIRFLOW_JWT_ISSUER` | Shared secret Airflow components use to authenticate to `airflow-apiserver` | `airflow_jwt_secret` / `airflow` |
 | `CRYPTO_API_BASE_URL` | CoinGecko `/coins/markets` endpoint the `extract` task calls | `https://api.coingecko.com/api/v3/coins/markets` |
+| `CRYPTO_TOP_N` | Coins to pull per run, by market cap (CoinGecko's `per_page` cap is 250) | `250` |
 | `CRYPTO_REFRESH_MS` | Dashboard auto-refresh interval, in milliseconds | `3600000` (60 min) |
 
 ## Running it
@@ -95,7 +96,7 @@ right away instead of waiting for the next scheduled slot.
 
 ## Pipeline design
 
-1. **extract** — calls `GET /coins/markets` (top 50 coins by market cap, USD),
+1. **extract** — calls `GET /coins/markets` (top 250 coins by market cap, USD),
    writes the raw JSON response to `data/raw/{ds}.json`.
 2. **transform_and_validate** (TaskGroup)
    - **transform** — casts types, drops rows missing required fields, dedupes
@@ -108,9 +109,8 @@ right away instead of waiting for the next scheduled slot.
    deletes any existing rows for that snapshot, then inserts the new batch.
    Re-running the same logical date is idempotent — no duplicate rows. The
    `CREATE TABLE`/`INSERT` column list in `dags/pipeline/load.py` is generated
-   from `transform.OUTPUT_COLUMNS` at import
-   time, so the table schema can't drift out of sync with what `transform`
-   actually produces.
+   from `constants.OUTPUT_COLUMNS` at import time, so the table schema can't
+   drift out of sync with what `transform` actually produces.
 
 Reliability: 3 retries with exponential backoff per task, `max_active_runs=1`
 to avoid overlapping runs. Failed task instances already show up in the

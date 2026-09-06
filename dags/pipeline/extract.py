@@ -9,9 +9,6 @@ import requests
 from requests.adapters import HTTPAdapter
 from urllib3.util.retry import Retry
 
-COINGECKO_MARKETS_URL = "https://api.coingecko.com/api/v3/coins/markets"
-
-
 def build_session() -> requests.Session:
     """CoinGecko's free tier rate-limits aggressively; back off on 429/5xx."""
     session = requests.Session()
@@ -28,7 +25,7 @@ def build_session() -> requests.Session:
     return session
 
 
-def fetch_market_data(top_n: int = 50, base_url: str = COINGECKO_MARKETS_URL) -> list[dict]:
+def fetch_market_data(base_url: str, top_n: int = 50) -> list[dict]:
     session = build_session()
     params = {
         "vs_currency": "usd",

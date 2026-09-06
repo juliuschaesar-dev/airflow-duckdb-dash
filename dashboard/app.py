@@ -12,7 +12,14 @@ import pandas as pd
 import plotly.express as px
 from dash import Dash, Input, Output, dcc, html
 
-from constants import FLAG_DOWN, FLAG_FLAT, FLAG_UNKNOWN, FLAG_UP, CRYPTO_MARKET_DATA
+from constants import (
+    CRYPTO_MARKET_DATA,
+    FLAG_DOWN,
+    FLAG_FLAT,
+    FLAG_UNKNOWN,
+    FLAG_UP,
+    OUTPUT_COLUMNS,
+)
 
 DB_PATH = os.environ.get("CRYPTO_DB_PATH", "/app/data/crypto.duckdb")
 REFRESH_INTERVAL_MS = int(os.environ["CRYPTO_REFRESH_MS"])
@@ -31,8 +38,7 @@ def load_history() -> pd.DataFrame:
     try:
         return con.execute(
             f"""
-            SELECT coin_id, symbol, name, current_price, market_cap, market_cap_rank,
-                   total_volume, price_change_percentage_24h, price_change_flag, snapshot_ts
+            SELECT {", ".join(OUTPUT_COLUMNS)}
             FROM {CRYPTO_MARKET_DATA}
             ORDER BY snapshot_ts
             """
