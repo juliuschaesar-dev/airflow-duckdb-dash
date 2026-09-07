@@ -72,7 +72,7 @@ cp .env.example .env
 | `AIRFLOW_JWT_SECRET` / `AIRFLOW_JWT_ISSUER` | Shared secret Airflow components use to authenticate to `airflow-apiserver` | `airflow_jwt_secret` / `airflow` |
 | `CRYPTO_API_BASE_URL` | CoinGecko `/coins/markets` endpoint the `extract` task calls | `https://api.coingecko.com/api/v3/coins/markets` |
 | `CRYPTO_TOP_N` | Coins to pull per run, by market cap (CoinGecko's `per_page` cap is 250) | `250` |
-| `CRYPTO_REFRESH_MS` | Dashboard auto-refresh interval, in milliseconds | `3600000` (60 min) |
+| `CRYPTO_REFRESH_MS` | Dashboard auto-refresh interval, in milliseconds | `600000` (10 min) |
 
 ## Running it
 
@@ -130,7 +130,7 @@ with `max_active_runs=1` so writes never overlap.
 - **Bar chart** — top 5 gainers and top 5 losers by 24h % change
 - **Treemap** — market cap comparison across all coins, colored by 24h change
 
-Refreshes automatically every 60 minutes via `dcc.Interval` (`CRYPTO_REFRESH_MS`).
+Refreshes automatically every 10 minutes via `dcc.Interval` (`CRYPTO_REFRESH_MS`).
 
 ## Tests
 
