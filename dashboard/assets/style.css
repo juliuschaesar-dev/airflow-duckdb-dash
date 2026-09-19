@@ -10,15 +10,28 @@ body {
     margin-bottom: 4px;
 }
 
+.controls-row {
+    display: flex;
+    gap: 24px;
+    flex-wrap: wrap;
+}
+
 .controls {
     margin: 16px 0;
     max-width: 480px;
+    flex: 1;
+    min-width: 260px;
 }
 
 .chart-row {
     display: flex;
     gap: 16px;
+    row-gap: 0;
     flex-wrap: wrap;
+}
+
+.chart-row > div {
+    margin: 0;
 }
 
 .empty-state {
@@ -26,4 +39,22 @@ body {
     background-color: #1c1f2b;
     border-left: 3px solid #f0a500;
     margin: 12px 0;
+}
+
+/* dcc.Dropdown: force a light control so its text stays readable
+   regardless of Dash's internal (and version-dependent) class names */
+#coin-selector,
+#coin-selector * {
+    background-color: #ffffff !important;
+    color: #111111 !important;
+}
+
+#coin-selector {
+    border-radius: 4px;
+}
+
+/* dcc.DatePickerRange: same problem as the Dropdown above */
+#date-range-selector,
+#date-range-selector * {
+    color: #111111 !important;
 }

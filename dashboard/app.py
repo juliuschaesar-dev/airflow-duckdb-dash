@@ -39,13 +39,15 @@ def load_history() -> pd.DataFrame:
     if con is None:
         return pd.DataFrame()
     try:
-        return con.execute(
+        df = con.execute(
             f"""
             SELECT {", ".join(OUTPUT_COLUMNS)}
             FROM {CRYPTO_MARKET_DATA}
             ORDER BY snapshot_ts
             """
         ).fetch_df()
+        df["snapshot_ts"] = pd.to_datetime(df["snapshot_ts"])
+        return df
     except duckdb.Error:
         # e.g. CatalogException: the table doesn't exist yet.
         return pd.DataFrame()
@@ -72,10 +74,23 @@ app.layout = html.Div(
         dcc.Interval(id="refresh-interval", interval=REFRESH_INTERVAL_MS, n_intervals=0),
         html.Div(id="empty-state"),
         html.Div(
-            className="controls",
+            className="controls-row",
             children=[
-                html.Label("Coins to chart:"),
-                dcc.Dropdown(id="coin-selector", multi=True, placeholder="Select coins..."),
+                html.Div(
+                    className="controls",
+                    children=[
+                        html.Label("Coins to chart:"),
+                        dcc.Dropdown(id="coin-selector", multi=True, placeholder="Select coins..."),
+                    ],
+                ),
+                html.Div(
+                    className="controls",
+                    children=[
+                        html.Label("Date range (price over time):"),
+                        html.Br(),
+                        dcc.DatePickerRange(id="date-range-selector"),
+                    ],
+                ),
             ],
         ),
         dcc.Graph(id="price-line-chart"),
@@ -111,16 +126,39 @@ def refresh_coin_options(_n):
 
 
 @app.callback(
-    Output("price-line-chart", "figure"),
-    Input("coin-selector", "value"),
+    Output("date-range-selector", "min_date_allowed"),
+    Output("date-range-selector", "max_date_allowed"),
+    Output("date-range-selector", "start_date"),
+    Output("date-range-selector", "end_date"),
     Input("refresh-interval", "n_intervals"),
 )
-def update_price_line_chart(selected_coins, _n):
+def refresh_date_range(_n):
+    df = load_history()
+    if df.empty:
+        return None, None, None, None
+    min_date = df["snapshot_ts"].min().date()
+    max_date = df["snapshot_ts"].max().date()
+    default_start = max(min_date, max_date - pd.Timedelta(days=30))
+    return min_date, max_date, default_start, max_date
+
+
+@app.callback(
+    Output("price-line-chart", "figure"),
+    Input("coin-selector", "value"),
+    Input("date-range-selector", "start_date"),
+    Input("date-range-selector", "end_date"),
+    Input("refresh-interval", "n_intervals"),
+)
+def update_price_line_chart(selected_coins, start_date, end_date, _n):
     df = load_history()
     if df.empty:
         return px.line(title="Price over time (no data yet)")
     if selected_coins:
         df = df[df["coin_id"].isin(selected_coins)]
+    if start_date:
+        df = df[df["snapshot_ts"] >= pd.to_datetime(start_date)]
+    if end_date:
+        df = df[df["snapshot_ts"] < pd.to_datetime(end_date) + pd.Timedelta(days=1)]
     fig = px.line(
         df,
         x="snapshot_ts",
@@ -159,21 +197,47 @@ def update_gainers_losers_bar(_n):
             FLAG_FLAT: "#7f7f7f",
             FLAG_UNKNOWN: "#bbbbbb",
         },
+        text="price_change_percentage_24h",
         title="Top gainers / losers (24h)",
-        labels={"price_change_percentage_24h": "24h change (%)", "name": "Coin"},
+        labels={
+            "price_change_percentage_24h": "24h change",
+            "name": "Coin",
+            "price_change_flag": "Trend",
+        },
     )
+    fig.update_traces(texttemplate="%{text:+.0f}%", textposition="outside", cliponaxis=False)
+    max_change = top["price_change_percentage_24h"].abs().max()
+    fig.update_xaxes(range=[-max_change * 1.25, max_change * 1.25])
     return fig
+
+
+def format_market_cap(value: float) -> str:
+    if value >= 1e12:
+        return f"${value / 1e12:.2f}T"
+    if value >= 1e9:
+        return f"${value / 1e9:.0f}B"
+    if value >= 1e6:
+        return f"${value / 1e6:.0f}M"
+    return f"${value:,.0f}"
 
 
 @app.callback(
     Output("market-cap-treemap", "figure"),
+    Input("coin-selector", "value"),
     Input("refresh-interval", "n_intervals"),
 )
-def update_market_cap_treemap(_n):
+def update_market_cap_treemap(selected_coins, _n):
     df = load_history()
     if df.empty:
         return px.treemap(title="Market cap comparison (no data yet)")
     latest = latest_snapshot(df)
+    if selected_coins:
+        latest = latest[latest["coin_id"].isin(selected_coins)]
+    latest = latest.copy()
+    latest["market_cap_label"] = latest["market_cap"].apply(format_market_cap)
+    latest["change_label"] = latest["price_change_percentage_24h"].apply(
+        lambda pct: f"{pct:+.1f}%" if pd.notna(pct) else "n/a"
+    )
     fig = px.treemap(
         latest,
         path=[px.Constant("All coins"), "name"],
@@ -181,8 +245,11 @@ def update_market_cap_treemap(_n):
         color="price_change_percentage_24h",
         color_continuous_scale="RdYlGn",
         color_continuous_midpoint=0,
-        title="Market cap comparison",
+        title="Market cap comparison (24h)",
+        labels={"price_change_percentage_24h": "24h change (%)"},
+        custom_data=["market_cap_label", "change_label"],
     )
+    fig.update_traces(texttemplate="<b>%{label}</b><br>%{customdata[0]}<br>%{customdata[1]}")
     return fig
 
 
