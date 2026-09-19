@@ -10,13 +10,13 @@ class DataQualityError(ValueError):
     """Raised when the transformed batch fails a quality check."""
 
 
-def validate_market_data(df: pd.DataFrame, min_rows: int = 1) -> None:
+def validate_market_data(df: pd.DataFrame) -> None:
     missing_cols = [c for c in OUTPUT_COLUMNS if c not in df.columns]
     if missing_cols:
         raise DataQualityError(f"Missing expected columns: {missing_cols}")
 
-    if len(df) < min_rows:
-        raise DataQualityError(f"Expected at least {min_rows} row(s), got {len(df)}")
+    if df.empty:
+        raise DataQualityError("Expected at least 1 row, got 0")
 
     if df["coin_id"].duplicated().any():
         dupes = df.loc[df["coin_id"].duplicated(), "coin_id"].tolist()

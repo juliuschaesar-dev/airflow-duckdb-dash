@@ -5,6 +5,7 @@ DuckDB file, this app only ever opens it with read_only=True.
 """
 from __future__ import annotations
 
+import io
 import os
 
 import duckdb
@@ -12,17 +13,11 @@ import pandas as pd
 import plotly.express as px
 from dash import Dash, Input, Output, dcc, html
 
-from constants import (
-    CRYPTO_MARKET_DATA,
-    FLAG_DOWN,
-    FLAG_FLAT,
-    FLAG_UNKNOWN,
-    FLAG_UP,
-    OUTPUT_COLUMNS,
-)
+from constants import CRYPTO_MARKET_DATA, OUTPUT_COLUMNS, PRICE_CHANGE_COLORS
 
 DB_PATH = os.environ.get("CRYPTO_DB_PATH", "/app/data/crypto.duckdb")
 REFRESH_INTERVAL_MS = int(os.environ["CRYPTO_REFRESH_MS"])
+NO_DATA_SUFFIX = " (no data yet)"
 
 
 def get_connection() -> duckdb.DuckDBPyConnection | None:
@@ -55,6 +50,15 @@ def load_history() -> pd.DataFrame:
         con.close()
 
 
+def history_from_store(data: str | None) -> pd.DataFrame:
+    """Deserialize the shared dcc.Store payload back into a DataFrame."""
+    if not data:
+        return pd.DataFrame()
+    df = pd.read_json(io.StringIO(data), orient="split")
+    df["snapshot_ts"] = pd.to_datetime(df["snapshot_ts"])
+    return df
+
+
 def latest_snapshot(df: pd.DataFrame) -> pd.DataFrame:
     if df.empty:
         return df
@@ -72,6 +76,7 @@ app.layout = html.Div(
         html.H1("Crypto Market Dashboard"),
         html.P("Source: CoinGecko → Airflow → DuckDB. Refreshes automatically."),
         dcc.Interval(id="refresh-interval", interval=REFRESH_INTERVAL_MS, n_intervals=0),
+        dcc.Store(id="history-store"),
         html.Div(id="empty-state"),
         html.Div(
             className="controls-row",
@@ -97,8 +102,8 @@ app.layout = html.Div(
         html.Div(
             className="chart-row",
             children=[
-                dcc.Graph(id="gainers-losers-bar", style={"flex": 1}),
-                dcc.Graph(id="market-cap-treemap", style={"flex": 1}),
+                dcc.Graph(id="gainers-losers-bar"),
+                dcc.Graph(id="market-cap-treemap"),
             ],
         ),
     ],
@@ -106,13 +111,24 @@ app.layout = html.Div(
 
 
 @app.callback(
+    Output("history-store", "data"),
+    Input("refresh-interval", "n_intervals"),
+)
+def refresh_history_store(_n):
+    df = load_history()
+    if df.empty:
+        return None
+    return df.to_json(date_format="iso", orient="split")
+
+
+@app.callback(
     Output("coin-selector", "options"),
     Output("coin-selector", "value"),
     Output("empty-state", "children"),
-    Input("refresh-interval", "n_intervals"),
+    Input("history-store", "data"),
 )
-def refresh_coin_options(_n):
-    df = load_history()
+def refresh_coin_options(data):
+    df = history_from_store(data)
     if df.empty:
         return [], [], html.Div(
             "No data yet — waiting for the Airflow pipeline's first successful run.",
@@ -130,10 +146,10 @@ def refresh_coin_options(_n):
     Output("date-range-selector", "max_date_allowed"),
     Output("date-range-selector", "start_date"),
     Output("date-range-selector", "end_date"),
-    Input("refresh-interval", "n_intervals"),
+    Input("history-store", "data"),
 )
-def refresh_date_range(_n):
-    df = load_history()
+def refresh_date_range(data):
+    df = history_from_store(data)
     if df.empty:
         return None, None, None, None
     min_date = df["snapshot_ts"].min().date()
@@ -144,15 +160,15 @@ def refresh_date_range(_n):
 
 @app.callback(
     Output("price-line-chart", "figure"),
+    Input("history-store", "data"),
     Input("coin-selector", "value"),
     Input("date-range-selector", "start_date"),
     Input("date-range-selector", "end_date"),
-    Input("refresh-interval", "n_intervals"),
 )
-def update_price_line_chart(selected_coins, start_date, end_date, _n):
-    df = load_history()
+def update_price_line_chart(data, selected_coins, start_date, end_date):
+    df = history_from_store(data)
     if df.empty:
-        return px.line(title="Price over time (no data yet)")
+        return px.line(title="Price over time" + NO_DATA_SUFFIX)
     if selected_coins:
         df = df[df["coin_id"].isin(selected_coins)]
     if start_date:
@@ -174,12 +190,12 @@ def update_price_line_chart(selected_coins, start_date, end_date, _n):
 
 @app.callback(
     Output("gainers-losers-bar", "figure"),
-    Input("refresh-interval", "n_intervals"),
+    Input("history-store", "data"),
 )
-def update_gainers_losers_bar(_n):
-    df = load_history()
+def update_gainers_losers_bar(data):
+    df = history_from_store(data)
     if df.empty:
-        return px.bar(title="Top gainers / losers (no data yet)")
+        return px.bar(title="Top gainers / losers (24h)" + NO_DATA_SUFFIX)
     latest = latest_snapshot(df).dropna(subset=["price_change_percentage_24h"])
     top = pd.concat(
         [latest.nlargest(5, "price_change_percentage_24h"),
@@ -191,12 +207,7 @@ def update_gainers_losers_bar(_n):
         y="name",
         orientation="h",
         color="price_change_flag",
-        color_discrete_map={
-            FLAG_UP: "#2ca02c",
-            FLAG_DOWN: "#d62728",
-            FLAG_FLAT: "#7f7f7f",
-            FLAG_UNKNOWN: "#bbbbbb",
-        },
+        color_discrete_map=PRICE_CHANGE_COLORS,
         text="price_change_percentage_24h",
         title="Top gainers / losers (24h)",
         labels={
@@ -223,13 +234,13 @@ def format_market_cap(value: float) -> str:
 
 @app.callback(
     Output("market-cap-treemap", "figure"),
+    Input("history-store", "data"),
     Input("coin-selector", "value"),
-    Input("refresh-interval", "n_intervals"),
 )
-def update_market_cap_treemap(selected_coins, _n):
-    df = load_history()
+def update_market_cap_treemap(data, selected_coins):
+    df = history_from_store(data)
     if df.empty:
-        return px.treemap(title="Market cap comparison (no data yet)")
+        return px.treemap(title="Market cap comparison (24h)" + NO_DATA_SUFFIX)
     latest = latest_snapshot(df)
     if selected_coins:
         latest = latest[latest["coin_id"].isin(selected_coins)]

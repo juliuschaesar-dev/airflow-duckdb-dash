@@ -16,7 +16,7 @@ class TestValidate:
     def test_fails_on_empty_dataframe(self):
         df = transform_market_data([], snapshot_ts="2024-01-01")
         with pytest.raises(DataQualityError):
-            validate_market_data(df, min_rows=1)
+            validate_market_data(df)
 
     def test_fails_on_duplicate_coin_id(self, raw_sample):
         df = transform_market_data(raw_sample, snapshot_ts="2024-01-01")
