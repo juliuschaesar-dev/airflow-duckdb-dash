@@ -34,7 +34,7 @@ End-to-end crypto market data pipeline: **CoinGecko API → Airflow → DuckDB �
 │   ├── airflow.txt               # common + requests, pyarrow, apache-airflow-providers-fab
 │   ├── test.txt                  # common + requests, pyarrow, pytest
 │   └── dashboard.txt             # common + dash, plotly, gunicorn
-├── data/                       # crypto.duckdb lives here at runtime (gitignored)
+├── data/                       # crypto.duckdb lives here for local (non-Docker) runs
 ├── tests/
 │   └── pipeline/                # business logic — no Airflow install required
 ├── .env.example                # copy to .env — see Configuration below
@@ -87,8 +87,7 @@ docker compose logs -f airflow-init  # watch db migrate + admin user creation
   a one-time password instead)
 - Dash dashboard: http://localhost:8050
 
-`-d` runs the stack detached, independent of the terminal session. To stop it:
-`docker compose down` (add `-v` to also drop the Postgres/log volumes).
+`-d` runs the stack detached, independent of the terminal session.
 
 The `crypto_pipeline` DAG is unpaused on creation and scheduled `0 6 * * *`.
 Trigger a manual run from the Airflow UI to see data show up on the dashboard
@@ -141,3 +140,13 @@ pytest tests/
 
 - `tests/pipeline/` — one file per `dags/pipeline/` module (`test_transform.py`,
   `test_validate.py`, `test_load.py`), no Airflow install required.
+
+## Stopping
+
+```bash
+docker compose down
+```
+
+Use `docker compose down -v` to also remove everything, including the
+Postgres metadata DB, Airflow logs, and the DuckDB data volume
+(`data/crypto.duckdb` — running the stack again starts from an empty database).
