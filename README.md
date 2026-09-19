@@ -24,7 +24,7 @@ End-to-end crypto market data pipeline: **CoinGecko API → Airflow → DuckDB �
 ├── dashboard/
 │   ├── app.py
 │   ├── assets/style.css
-│   └── Dockerfile              # python:3.13.14
+│   └── Dockerfile              # python:3.13.14-slim
 ├── docker/airflow/
 │   └── Dockerfile              # apache/airflow:3.3.2-python3.14
 ├── docs/
@@ -130,6 +130,12 @@ with `max_active_runs=1` so writes never overlap.
 - **Treemap** — market cap comparison across all coins, colored by 24h change
 
 Refreshes automatically every 10 minutes via `dcc.Interval` (`CRYPTO_REFRESH_MS`).
+
+After changing `dashboard/app.py` or its assets, rebuild just this service:
+
+```bash
+docker compose up --build -d dashboard
+```
 
 ## Tests
 
