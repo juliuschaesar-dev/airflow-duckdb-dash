@@ -191,16 +191,23 @@ def update_price_line_chart(data, selected_coins, start_date, end_date):
 @app.callback(
     Output("gainers-losers-bar", "figure"),
     Input("history-store", "data"),
+    Input("date-range-selector", "end_date"),
 )
-def update_gainers_losers_bar(data):
+def update_gainers_losers_bar(data, end_date):
     df = history_from_store(data)
     if df.empty:
-        return px.bar(title="Top gainers / losers (24h)" + NO_DATA_SUFFIX)
+        return px.bar(title="Top gainers / losers" + NO_DATA_SUFFIX)
+    if end_date:
+        cutoff = pd.to_datetime(end_date) + pd.Timedelta(days=1)
+        df = df[df["snapshot_ts"] < cutoff]
+        if df.empty:
+            return px.bar(title="Top gainers / losers" + NO_DATA_SUFFIX)
     latest = latest_snapshot(df).dropna(subset=["price_change_percentage_24h"])
     top = pd.concat(
         [latest.nlargest(5, "price_change_percentage_24h"),
          latest.nsmallest(5, "price_change_percentage_24h")]
     ).drop_duplicates(subset=["coin_id"]).sort_values("price_change_percentage_24h")
+    snapshot_label = latest["snapshot_ts"].max().strftime("%b %d, %Y")
     fig = px.bar(
         top,
         x="price_change_percentage_24h",
@@ -209,9 +216,9 @@ def update_gainers_losers_bar(data):
         color="price_change_flag",
         color_discrete_map=PRICE_CHANGE_COLORS,
         text="price_change_percentage_24h",
-        title="Top gainers / losers (24h)",
+        title="Top gainers / losers",
         labels={
-            "price_change_percentage_24h": "24h change",
+            "price_change_percentage_24h": snapshot_label,
             "name": "Coin",
             "price_change_flag": "Trend",
         },
@@ -236,11 +243,17 @@ def format_market_cap(value: float) -> str:
     Output("market-cap-treemap", "figure"),
     Input("history-store", "data"),
     Input("coin-selector", "value"),
+    Input("date-range-selector", "end_date"),
 )
-def update_market_cap_treemap(data, selected_coins):
+def update_market_cap_treemap(data, selected_coins, end_date):
     df = history_from_store(data)
     if df.empty:
-        return px.treemap(title="Market cap comparison (24h)" + NO_DATA_SUFFIX)
+        return px.treemap(title="Market cap comparison" + NO_DATA_SUFFIX)
+    if end_date:
+        cutoff = pd.to_datetime(end_date) + pd.Timedelta(days=1)
+        df = df[df["snapshot_ts"] < cutoff]
+        if df.empty:
+            return px.treemap(title="Market cap comparison" + NO_DATA_SUFFIX)
     latest = latest_snapshot(df)
     if selected_coins:
         latest = latest[latest["coin_id"].isin(selected_coins)]
@@ -249,6 +262,7 @@ def update_market_cap_treemap(data, selected_coins):
     latest["change_label"] = latest["price_change_percentage_24h"].apply(
         lambda pct: f"{pct:+.1f}%" if pd.notna(pct) else "n/a"
     )
+    snapshot_label = latest["snapshot_ts"].max().strftime("%b %d, %Y")
     fig = px.treemap(
         latest,
         path=[px.Constant("All coins"), "name"],
@@ -256,8 +270,8 @@ def update_market_cap_treemap(data, selected_coins):
         color="price_change_percentage_24h",
         color_continuous_scale="RdYlGn",
         color_continuous_midpoint=0,
-        title="Market cap comparison (24h)",
-        labels={"price_change_percentage_24h": "24h change (%)"},
+        title=f"Market Cap Comparison - {snapshot_label}",
+        labels={"price_change_percentage_24h": "(%)"},
         custom_data=["market_cap_label", "change_label"],
     )
     fig.update_traces(texttemplate="<b>%{label}</b><br>%{customdata[0]}<br>%{customdata[1]}")
