@@ -196,12 +196,12 @@ def update_price_line_chart(data, selected_coins, start_date, end_date):
 def update_gainers_losers_bar(data, end_date):
     df = history_from_store(data)
     if df.empty:
-        return px.bar(title="Top gainers / losers" + NO_DATA_SUFFIX)
+        return px.bar(title="Top 5 Gainers / Losers" + NO_DATA_SUFFIX)
     if end_date:
         cutoff = pd.to_datetime(end_date) + pd.Timedelta(days=1)
         df = df[df["snapshot_ts"] < cutoff]
         if df.empty:
-            return px.bar(title="Top gainers / losers" + NO_DATA_SUFFIX)
+            return px.bar(title="Top 5 Gainers / Losers" + NO_DATA_SUFFIX)
     latest = latest_snapshot(df).dropna(subset=["price_change_percentage_24h"])
     top = pd.concat(
         [latest.nlargest(5, "price_change_percentage_24h"),
@@ -216,7 +216,7 @@ def update_gainers_losers_bar(data, end_date):
         color="price_change_flag",
         color_discrete_map=PRICE_CHANGE_COLORS,
         text="price_change_percentage_24h",
-        title="Top gainers / losers",
+        title="Top 5 Gainers / Losers",
         labels={
             "price_change_percentage_24h": snapshot_label,
             "name": "Coin",
