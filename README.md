@@ -125,11 +125,10 @@ with `max_active_runs=1` so writes never overlap.
 
 ## Dashboard
 
-Screenshots: see the [v1 release assets](https://github.com/juliuschaesar-dev/airflow-duckdb-dash/releases/tag/v1).
+Dashboard screenshot for reference:
 
-- **Line chart** — price over time, one line per selected coin, respects the date range filter
-- **Bar chart** ("Top 5 Gainers / Losers") — top 5 gainers and top 5 losers by % change, as of the date range filter's end date
-- **Treemap** ("Market Cap Comparison") — market cap comparison across all coins, colored by % change, as of the date range filter's end date
+![Dashboard - price chart and gainers/losers](docs/screenshots/Crypto%20Market%20Dashboard-1.png)
+![Dashboard - market cap treemap](docs/screenshots/Crypto%20Market%20Dashboard-2.png)
 
 Refreshes automatically every 10 minutes via `dcc.Interval` (`CRYPTO_REFRESH_MS`).
 
