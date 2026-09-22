@@ -15,29 +15,15 @@ End-to-end crypto market data pipeline: **CoinGecko API → Airflow → DuckDB �
 ## Repo structure
 
 ```
-├── dags/
-│   ├── crypto_pipeline.py      # DAG wiring (Airflow 3 Task SDK / TaskFlow API)
-│   ├── constants.py            # shared literals: table name, schema columns, flags
-│   ├── .airflowignore          # excludes pipeline/ and constants.py from DAG-file parsing
-│   └── pipeline/               # extract/transform/validate/load — no Airflow dependency
-├── plugins/                    # custom operators/hooks/sensors (none yet — placeholder)
-├── dashboard/
-│   ├── app.py
-│   ├── assets/style.css
-│   └── Dockerfile              # python:3.13.14-slim
-├── docker/airflow/
-│   └── Dockerfile              # apache/airflow:3.3.2-python3.14
-├── docs/
-│   └── architecture.svg        # diagram rendered at the top of this README
+├── dags/                        # DAG wiring, shared constants, extract/transform/validate/load pipeline
+├── plugins/                     # custom operators/hooks/sensors (none yet — placeholder)
+├── dashboard/                   # Plotly Dash app
+├── docker/airflow/              # Airflow image build
+├── docs/                        # architecture diagram, screenshots
 ├── requirements/                # single source of truth for dependency floors
-│   ├── common.txt               # duckdb, pandas — shared by every environment
-│   ├── airflow.txt               # common + requests, pyarrow, apache-airflow-providers-fab
-│   ├── test.txt                  # common + requests, pyarrow, pytest
-│   └── dashboard.txt             # common + dash, plotly, gunicorn
-├── data/                       # crypto.duckdb lives here for local (non-Docker) runs
-├── tests/
-│   └── pipeline/                # business logic — no Airflow install required
-├── .env.example                # copy to .env — see Configuration below
+├── data/                        # crypto.duckdb lives here for local (non-Docker) runs
+├── tests/                       # business logic tests — no Airflow install required
+├── .env.example                 # copy to .env — see Configuration below
 └── docker-compose.yml
 ```
 
@@ -64,15 +50,6 @@ All credentials and environment-specific config are read from a `.env` file
 ```bash
 cp .env.example .env
 ```
-
-| Variable | Purpose | Default |
-| --- | --- | --- |
-| `POSTGRES_USER` / `POSTGRES_PASSWORD` / `POSTGRES_DB` | Airflow's metadata database | `airflow` / `airflow` / `airflow` |
-| `AIRFLOW_ADMIN_USERNAME` / `AIRFLOW_ADMIN_PASSWORD` | Airflow web UI login | `admin` / `admin` |
-| `AIRFLOW_JWT_SECRET` / `AIRFLOW_JWT_ISSUER` | Shared secret Airflow components use to authenticate to `airflow-apiserver` | `airflow_jwt_secret` / `airflow` |
-| `CRYPTO_API_BASE_URL` | CoinGecko `/coins/markets` endpoint the `extract` task calls | `https://api.coingecko.com/api/v3/coins/markets` |
-| `CRYPTO_TOP_N` | Coins to pull per run, by market cap (CoinGecko's `per_page` cap is 250) | `250` |
-| `CRYPTO_REFRESH_MS` | Dashboard auto-refresh interval, in milliseconds | `600000` (10 min) |
 
 ## Running it
 
