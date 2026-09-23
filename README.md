@@ -21,7 +21,7 @@ End-to-end crypto market data pipeline: **CoinGecko API → Airflow → DuckDB �
 ├── docker/airflow/              # Airflow image build
 ├── docs/                        # architecture diagram, screenshots
 ├── requirements/                # single source of truth for dependency floors
-├── data/                        # crypto.duckdb lives here for local (non-Docker) runs
+├── data/                        # crypto.duckdb + raw/processed snapshots (bind-mounted into Docker)
 ├── tests/                       # business logic tests — no Airflow install required
 ├── .env.example                 # copy to .env — see Configuration below
 └── docker-compose.yml
@@ -100,6 +100,9 @@ task is the only process that opens `data/crypto.duckdb` for writing;
 the Dash service always connects with `read_only=True`, and Airflow runs
 with `max_active_runs=1` so writes never overlap.
 
+`data/` is bind-mounted into the containers, so the database lives on the
+host. Open it read-only from host tools, and not while `load` is running.
+
 ## Dashboard
 
 Dashboard screenshot for reference:
@@ -131,6 +134,7 @@ pytest tests/
 docker compose down
 ```
 
-Use `docker compose down -v` to also remove everything, including the
-Postgres metadata DB, Airflow logs, and the DuckDB data volume
-(`data/crypto.duckdb` — running the stack again starts from an empty database).
+Use `docker compose down -v` to also remove the Postgres metadata DB and
+Airflow logs volumes. The DuckDB database and snapshots in `data/` are on the
+host, so they are kept; delete `data/crypto.duckdb` to start from an empty
+database.

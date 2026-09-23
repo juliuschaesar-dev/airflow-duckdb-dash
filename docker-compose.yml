@@ -18,7 +18,7 @@ x-airflow-common: &airflow-common
   volumes:
     - ./dags:/opt/airflow/dags
     - ./plugins:/opt/airflow/plugins
-    - duckdb_data:/opt/airflow/data
+    - ./data:/opt/airflow/data
     - airflow_logs:/opt/airflow/logs
   depends_on:
     postgres:
@@ -87,11 +87,10 @@ services:
       CRYPTO_DB_PATH: /app/data/crypto.duckdb
       CRYPTO_REFRESH_MS: ${CRYPTO_REFRESH_MS}
     volumes:
-      - duckdb_data:/app/data:ro
+      - ./data:/app/data:ro
     ports:
       - "8050:8050"
 
 volumes:
   postgres_data:
   airflow_logs:
-  duckdb_data:
