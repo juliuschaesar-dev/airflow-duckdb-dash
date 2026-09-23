@@ -15,12 +15,13 @@ FLAG_UNKNOWN = "unknown"
 PRICE_CHANGE_FLAGS = (FLAG_UP, FLAG_DOWN, FLAG_FLAT, FLAG_UNKNOWN)
 
 # Single source of truth for the dashboard's flag -> color mapping, so a new
-# flag added above can't silently end up uncolored on the gainers/losers chart.
+# flag added above can't silently end up uncolored on the dashboard's trend
+# sparklines. Tuned for the dashboard's dark surface.
 PRICE_CHANGE_COLORS = {
-    FLAG_UP: "#2ca02c",
-    FLAG_DOWN: "#d62728",
-    FLAG_FLAT: "#7f7f7f",
-    FLAG_UNKNOWN: "#bbbbbb",
+    FLAG_UP: "#3ecf8e",
+    FLAG_DOWN: "#f0616d",
+    FLAG_FLAT: "#8b93a7",
+    FLAG_UNKNOWN: "#5b6275",
 }
 
 # Raw CoinGecko fields a row must have to be kept.

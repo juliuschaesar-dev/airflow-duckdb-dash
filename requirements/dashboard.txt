@@ -1,4 +1,4 @@
 -r common.txt
-dash>=2.17
+dash>=4.0
 plotly>=5.22
 gunicorn>=22.0
