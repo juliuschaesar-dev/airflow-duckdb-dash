@@ -107,8 +107,8 @@ host. Open it read-only from host tools, and not while `load` is running.
 
 Dashboard screenshot for reference:
 
-![Dashboard - price chart and gainers/losers](docs/screenshots/Crypto%20Market%20Dashboard-1.png)
-![Dashboard - market cap treemap](docs/screenshots/Crypto%20Market%20Dashboard-2.png)
+![Dashboard - KPI cards, relative performance chart and watchlist](docs/screenshots/Crypto%20Market%20Dashboard-1.png)
+![Dashboard - top movers and market cap map](docs/screenshots/Crypto%20Market%20Dashboard-2.png)
 
 Refreshes automatically every 10 minutes via `dcc.Interval` (`CRYPTO_REFRESH_MS`).
 
